@@ -1,0 +1,170 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = []
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+model action {
+  Id_action      Int            @id(map: "PK__action__C0D0346D3091E8D7") @default(autoincrement())
+  description    String?        @db.VarChar(1000)
+  actionTypeName String         @db.VarChar(20)
+  have_actions   have_actions[]
+}
+
+model equipment {
+  Id_equipment       Int      @id(map: "PK__equipmen__DC7CBD12827DE9D9") @default(autoincrement())
+  tag                String?  @db.VarChar(10)
+  site               String?  @db.VarChar(100)
+  building           String?  @db.VarChar(100)
+  family             String?  @db.VarChar(500)
+  subfamily          String?  @db.VarChar(500)
+  description        String?  @db.VarChar(1000)
+  plantSection       String?  @db.VarChar(100)
+  functionalLocation String?  @db.VarChar(100)
+  costCenter         String?  @db.VarChar(100)
+  rappel             rappel[]
+}
+
+model have {
+  roleName  String @db.VarChar(20)
+  Id_rappel Int
+  users     users  @relation(fields: [Id_rappel], references: [Id_rappel], onUpdate: NoAction, map: "FK__have__Id_rappel__5708E33C")
+  role      role   @relation(fields: [roleName], references: [roleName], onUpdate: NoAction, map: "FK__have__roleName__5614BF03")
+
+  @@id([roleName, Id_rappel], map: "PK__have__9191BF6A5A6BDC41")
+}
+
+model have_actions {
+  Id_rappel Int
+  Id_action Int
+  action    action @relation(fields: [Id_action], references: [Id_action], onUpdate: NoAction, map: "FK__have_acti__Id_ac__60924D76")
+  rappel    rappel @relation(fields: [Id_rappel], references: [Id_rappel], onUpdate: NoAction, map: "FK__have_acti__Id_ra__5F9E293D")
+
+  @@id([Id_rappel, Id_action], map: "PK__have_act__CC5173E5A9582FBF")
+}
+
+model impact {
+  Id_impact  Int     @id(map: "PK__impact__CE8EF96AAC6133A4") @default(autoincrement())
+  impactName String? @db.VarChar(255)
+  Id_rappel  Int?
+  rappel     rappel? @relation(fields: [Id_rappel], references: [Id_rappel], onDelete: NoAction, onUpdate: NoAction, map: "FK__impact__Id_rappe__3EFC4F81")
+}
+
+model interventionPerson {
+  Id_interventionPerson Int       @id(map: "PK__interven__0365983B56C7581B") @default(autoincrement())
+  startAt               DateTime?
+  endAt                 DateTime?
+  Id_rappel             Int?
+  Id_person             Int
+  person                person    @relation(fields: [Id_person], references: [Id_person], onUpdate: NoAction, map: "FK__intervent__Id_pe__4F67C174")
+  rappel                rappel?   @relation(fields: [Id_rappel], references: [Id_rappel], onDelete: NoAction, onUpdate: NoAction, map: "FK__intervent__Id_ra__4E739D3B")
+}
+
+model lmra {
+  Id_lmra   Int      @id(map: "PK__lmra__0B3147ECFDAE70F5") @default(autoincrement())
+  q1        Boolean?
+  q1_1      Boolean?
+  q2        Boolean?
+  q2_1      Boolean?
+  q3        Boolean?
+  q3_1      Boolean?
+  q4        Boolean?
+  q4_1      Boolean?
+  q5        Boolean?
+  q5_1      Boolean?
+  q6        Boolean?
+  q6_1      Boolean?
+  q7        Boolean?
+  q8        Boolean?
+  q9        Boolean?
+  Id_rappel Int      @unique(map: "UQ__lmra__005C70A21FDF664B")
+  filename  String?  @db.NVarChar(255)
+  mimetype  String?  @db.NVarChar(255)
+  data      Bytes?
+  rappel    rappel   @relation(fields: [Id_rappel], references: [Id_rappel], onUpdate: NoAction, map: "FK__lmra__Id_rappel__53385258")
+}
+
+model person {
+  Id_person          Int                  @id(map: "PK__person__820612DD0639BB82") @default(autoincrement())
+  userID             String?              @unique(map: "UQ__person__CB9A1CDE756F7F4A") @db.VarChar(20)
+  garde              String?              @db.VarChar(50)
+  name               String?              @db.VarChar(100)
+  interventionPerson interventionPerson[]
+  rappel             rappel[]
+  users              users[]
+}
+
+model rappel {
+  Id_rappel            Int                  @id(map: "PK__rappel__005C70A343C93451") @default(autoincrement())
+  startAt              DateTime?
+  endAt                DateTime?
+  diffusion            String?              @db.VarChar(50)
+  contactInformation   String?              @db.VarChar(1000)
+  notification         String?              @db.VarChar(50)
+  details              String?              @db.VarChar(1000)
+  reccurence           Boolean?
+  cause                String?              @db.VarChar(1000)
+  postInterState       String?              @db.VarChar(20)
+  preInterState        String?              @db.VarChar(20)
+  interventionTypeName String?              @db.VarChar(20)
+  contactRoleName      String?              @db.VarChar(20)
+  subRoleName          String?              @db.VarChar(20)
+  categoryName         String?              @db.VarChar(50)
+  Id_guardPerson       Int
+  Id_equipment         Int
+  deviation            deviation[]
+  have_actions         have_actions[]
+  impact               impact[]
+  interventionPerson   interventionPerson[]
+  lmra                 lmra?
+  equipment            equipment            @relation(fields: [Id_equipment], references: [Id_equipment], onUpdate: NoAction, map: "FK__rappel__Id_equip__2D87AABC")
+  guardPerson          person               @relation(fields: [Id_guardPerson], references: [Id_person], onUpdate: NoAction, map: "FK__rappel__Id_guard__49AEE81E")
+}
+
+model role {
+  roleName String @id(map: "PK__role__B1947860CC263432") @db.VarChar(20)
+  have     have[]
+}
+
+model users {
+  Id_rappel   Int     @id(map: "PK__users__005C70A3C12D7A8C") @default(autoincrement())
+  username    String  @db.VarChar(50)
+  hash        String  @db.VarChar(200)
+  rtHash      String? @db.VarChar(200)
+  Id_person   Int
+  user_gsk_id String? @unique(map: "UC_user_gsk_id") @db.VarChar(100)
+  user_email  String? @db.VarChar(100)
+  user_role   String? @db.VarChar(50)
+  have        have[]
+  person      person  @relation(fields: [Id_person], references: [Id_person], onUpdate: NoAction, map: "FK__users__Id_person__46D27B73")
+}
+
+model deviation {
+  Id_deviation          Int     @id(map: "PK__deviatio__01F881DE0FF04395") @default(autoincrement())
+  deviationName         String? @db.VarChar(20)
+  Id_rappel             Int?
+  deviationNotification String? @db.VarChar(20)
+  rappel                rappel? @relation(fields: [Id_rappel], references: [Id_rappel], onDelete: NoAction, onUpdate: NoAction, map: "FK__deviation__Id_ra__455F344D")
+}
+
+model sysdiagrams {
+  name         String @db.NVarChar(128)
+  principal_id Int
+  diagram_id   Int    @id(map: "PK__sysdiagr__C2B05B6115D7B49C") @default(autoincrement())
+  version      Int?
+  definition   Bytes?
+
+  @@unique([principal_id, name], map: "UK_principal_name")
+}
+
+model lmraPDF {
+  Id_lmra   Int     @id(map: "PK__lmraPDF__0B3147EC17CD0CEE") @default(autoincrement())
+  filename  String? @db.NVarChar(255)
+  mimetype  String? @db.NVarChar(255)
+  data      Bytes?
+  Id_rappel Int?
+}
